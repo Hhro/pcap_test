@@ -21,24 +21,52 @@ void usage() {
   printf("sample: pcap_test wlan0\n");
 }
 
+/*
+ Name: parse_mac
+ Type: function
+ Description:
+  Parse src/dst MAC addresses from ethernet header, and save it into argument buffers.
+ Args:
+  struct ethhdr* ethernet : ptr of ethernet
+  char* src_mac : source mac address buffer
+  char* dst_mac : destination mac address buffer
+ Change log:
+  Replace bad use of strlen()
+*/
 void parse_mac(struct ethhdr* ethernet, char* src_mac, char* dst_mac){
+  int len=0;
+
   for(int i=0; i<ETH_ALEN; i++){
-    sprintf(src_mac+strlen(src_mac),"%02X",ethernet->h_source[i]);
-    sprintf(dst_mac+strlen(dst_mac),"%02X",ethernet->h_dest[i]);
+    sprintf(src_mac+len,"%02X",ethernet->h_source[i]);
+    sprintf(dst_mac+len,"%02X",ethernet->h_dest[i]);
     
     if(i != ETH_ALEN-1){
       strcat(src_mac,":");
       strcat(dst_mac,":");
     }
+    
+    len += 3;
   }
 }
 
-void print_hex(char *buf, int maxlen){
-  int len = strlen(buf) < maxlen ? strlen(buf) : maxlen;
+/*
+ Name: print_hex
+ Type: function
+ Description:
+  Print data of buffer encoded in hex form.
+ Args:
+  char *buf: target buffer of print
+  int buf_len: length of buffer
+  int maxlen: max print length
+ Change log:
+  Replace bad use of strlen()
+*/
+void print_hex(char *buf, int buf_len, int maxlen){
+  int len = buf_len < maxlen ? buf_len : maxlen;
 
   for(int i=1; i<=len; i++){
     printf("%02X ",buf[i-1]);
-    if(i==0x10)
+    if(i%0x10 == 0)
       printf("\n");
   }
   printf("\n");
@@ -107,7 +135,7 @@ int main(int argc, char* argv[]) {
     if(payload_size != 0){
       payload = PAYLOAD(packet);
       printf("Payload: \n");
-      print_hex(payload, MAXPAYLEN);
+      print_hex(payload, payload_size, MAXPAYLEN);
     }
 
     next:
